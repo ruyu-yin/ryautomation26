@@ -1,0 +1,30 @@
+# 核心测试框架
+pytest==7.4.3
+pytest-json-report==1.5.0
+pytest-html==4.1.1
+allure-pytest==2.13.2
+
+# API 测试
+requests==2.31.0
+pytest-requests==0.1.0
+
+# Android App 测试
+Appium-Python-Client==3.2.1
+selenium==4.15.2
+
+# 报告生成
+Jinja2==3.1.2
+markdown==3.5.1
+
+# 数据库
+sqlite-utils==3.36
+
+# 通知
+requests==2.31.0
+
+# 配置管理
+PyYAML==6.0.1
+
+# 工具
+python-dateutil==2.8.2
+loguru==0.7.2

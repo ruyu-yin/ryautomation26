@@ -1,0 +1,128 @@
+// Jenkins Pipeline 配置
+// 用于自动化测试平台的 CI/CD 集成
+
+pipeline {
+    agent any
+    
+    environment {
+        // 环境变量配置
+        PYTHONUNBUFFERED = '1'
+        PYTEST_ADDOPTS = '--color=yes'
+        REPORT_DIR = 'reports'
+        DATABASE_DIR = 'database'
+    }
+    
+    parameters {
+        choice(
+            name: 'TEST_TYPE',
+            choices: ['all', 'api', 'app'],
+            description: '选择要执行的测试类型'
+        )
+        booleanParam(
+            name: 'SEND_NOTIFICATION',
+            defaultValue: true,
+            description: '是否发送测试通知'
+        )
+    }
+    
+    stages {
+        stage('准备环境') {
+            steps {
+                echo '🔧 准备测试环境...'
+                
+                // 安装 Python 依赖
+                sh '''
+                    python3 --version
+                    pip3 install -r requirements.txt
+                '''
+                
+                // 创建必要目录
+                sh '''
+                    mkdir -p reports/html reports/markdown reports/allure-results
+                    mkdir -p database logs
+                '''
+            }
+        }
+        
+        stage('执行测试') {
+            steps {
+                echo '🧪 执行自动化测试...'
+                
+                // 运行测试
+                sh '''
+                    python3 src/run_tests.py \
+                        --type ${TEST_TYPE} \
+                        --ci-mode
+                '''
+            }
+            post {
+                always {
+                    // 保存测试报告
+                    archiveArtifacts artifacts: 'reports/**/*.html, reports/**/*.md, reports/**/*.json', 
+                                     fingerprint: true, allowEmptyArchive: true
+                     
+                    // 保存 Allure 结果
+                    archiveArtifacts artifacts: 'reports/allure-results/**', 
+                                     fingerprint: true, allowEmptyArchive: true
+                }
+            }
+        }
+        
+        stage('生成 Allure 报告') {
+            steps {
+                echo '📊 生成 Allure 报告...'
+                
+                script {
+                    // 如果安装了 Allure 插件
+                    if (toolExists('allure')) {
+                        allure([
+                            includeProperties: false,
+                            jdk: '',
+                            properties: [],
+                            reportBuildPolicy: 'ALWAYS',
+                            results: [[path: 'reports/allure-results']]
+                        ])
+                    }
+                }
+            }
+        }
+        
+        stage('发布报告') {
+            steps {
+                echo '📄 发布测试报告...'
+                
+                // 使用 HTML Publisher 插件发布报告
+                publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'reports/html',
+                    reportFiles: 'latest.html',
+                    reportName: '自动化测试报告',
+                    reportTitles: ['自动化测试报告']
+                ])
+            }
+        }
+    }
+    
+    post {
+        always {
+            // 清理工作空间（可选）
+            // cleanWs()
+            
+            // 输出测试结果总结
+            echo '📋 测试执行完成'
+        }
+        
+        failure {
+            echo '❌ 测试失败！请查看报告了解详情'
+            
+            // 可以在这里添加额外的失败处理逻辑
+            // 例如：发送紧急通知、创建 JIRA issue 等
+        }
+        
+        success {
+            echo '✅ 所有测试通过！'
+        }
+    }
+}

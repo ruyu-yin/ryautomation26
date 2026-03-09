@@ -1,0 +1,56 @@
+# 主配置文件
+
+# 测试配置
+test:
+  # 测试目录
+  test_dirs:
+    - tests/api
+    - tests/app
+  
+  # pytest 参数
+  pytest_args:
+    - "--json-report"
+    - "--json-report-file=./reports/pytest-report.json"
+    - "--html=./reports/html/report.html"
+    - "--self-contained-html"
+    - "--alluredir=./reports/allure-results"
+    - "-v"
+    - "--tb=short"
+
+# 报告配置
+reports:
+  output_dir: ./reports
+  html_dir: ./reports/html
+  markdown_dir: ./reports/markdown
+  allure_dir: ./reports/allure-results
+  json_report: ./reports/pytest-report.json
+
+# 数据库配置
+database:
+  path: ./database/test_results.db
+
+# 清理配置
+clean_dirs:
+  - ./reports/allure-results
+  - ./reports/html
+  - ./reports/markdown
+
+# 通知配置
+notification:
+  # 严格模式：任何失败都通知
+  strict_mode: true
+  
+  # 飞书配置
+  feishu:
+    enabled: true
+    config_file: config/feishu_config.yaml
+  
+  # 邮件配置
+  email:
+    enabled: true
+    config_file: config/email_config.yaml
+
+# Jenkins CI 模式
+ci:
+  enabled: false
+  jenkins_workspace: ${WORKSPACE}
