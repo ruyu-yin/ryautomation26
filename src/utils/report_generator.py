@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 # -*- coding: utf-8 -*-
 """
 报告生成模块 - 生成 HTML 和 Markdown 格式的质量报告
